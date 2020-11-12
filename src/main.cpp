@@ -8,11 +8,11 @@ char ssid[] = "OnePlus5T"; //  your network SSID (name)
 char pass[] = "123321hej";    // your network password (use for WPA, or use as key for WEP)
 
 
-unsigned int localPort = 4000;      // local port to listen on
+unsigned int outgoinglocalPort = 4000;      // local port to listen on
+unsigned int incomminglocalPort=4004;
 IPAddress ip;
 
 WiFiUDP UDP;
-AsyncUDP udp;
 
 char packetBuffer[255];
 char reply[] = "connectionSucces";
@@ -37,17 +37,34 @@ void setup() {
     // wait 10 seconds for connection:
 
     delay(2000);
+    Serial.println(WiFi.localIP());
 
   }
 
   Serial.println("Connected to wifi");
 
-  UDP.begin(localPort);
+  UDP.begin(incomminglocalPort);
 }
 
-
 void loop() {
-  if(UDP.parsePacket()){
-    Serial.println("alksjdf");
+  // if there's data available, read a packet
+  int packetSize = UDP.parsePacket();
+  if(packetSize)
+  {
+    
+    Serial.print("Received packet of size ");
+    Serial.println(packetSize);
+
+    UDP.read(packetBuffer, 255);
+    
+    UDP.beginPacket(UDP.remoteIP(), UDP.remotePort());
+
+    int i = 0;
+    while (reply[i] != 0)
+    UDP.write((uint8_t)reply[i++]);
+
+    UDP.endPacket();
+
   }
+
 }
