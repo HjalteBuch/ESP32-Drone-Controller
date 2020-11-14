@@ -23,8 +23,8 @@ int pitchDeadzone;
 int yawDeadzone;
 
 int status = WL_IDLE_STATUS;
-char ssid[] = "OnePlus5T"; //  your network SSID (name)
-char pass[] = "123321hej";    // your network password (use for WPA, or use as key for WEP)
+char ssid[] = "Direkte til Himlen"; //  your network SSID (name)
+char pass[] = "Espresso123";    // your network password (use for WPA, or use as key for WEP)
 
 
 unsigned int outgoinglocalPort = 4000;      // local port to listen on
@@ -110,43 +110,51 @@ cmd = "rc " + String(roll) + " " + String(pitch) + " " + String(throttle) + " " 
 Serial.println(cmd);
 }
 
-void loop() {
-  // if there's data available, read a packet
-  int packetSize = UDP.parsePacket();
-  if(packetSize)
-  {
-    
-    Serial.print("Received packet of size ");
-    Serial.println(packetSize);
+  void establishConnection(){
+    if(!isconnected){
+    // if there's data available, read a packet
+      int packetSize = UDP.parsePacket();
+      if(packetSize){
+        Serial.print("Received packet of size ");
+        Serial.println(packetSize);
+        
 
-    UDP.read(packetBuffer, 255);
-    
-    UDP.beginPacket(UDP.remoteIP(), UDP.remotePort());
-
-   //UDP.write would not sende char array
-   //Solution code found at:https://forum.arduino.cc/index.php?topic=586641.0 - Comment from lesept
-    int i = 0;
-    while (reply[i] != 0)
-    UDP.write((uint8_t)reply[i++]);
-
-    UDP.endPacket();
-
-    isconnected=true;
-    
+        UDP.read(packetBuffer, 255);
+          if(strcmp(packetBuffer,"connectionAttempt")==0){
+            delay(1000);
+            UDP.beginPacket(UDP.remoteIP(), outgoinglocalPort);
+            //UDP.write would not sende char array
+            //Solution code found at:https://forum.arduino.cc/index.php?topic=586641.0 - Comment from lesept
+            int i = 0;
+            while (reply[i] != 0)
+            UDP.write((uint8_t)reply[i++]);
+            
+            UDP.endPacket();
+            delay(1000);
+            isconnected=true;
+      }
+    }
   }
-  if(isconnected){
-UDP.beginPacket(UDP.remoteIP(), UDP.remotePort());
+}
 
+void sendCommands(){
+ if(isconnected){
+    rc();
+    UDP.beginPacket(UDP.remoteIP(), outgoinglocalPort);
    //UDP.write would not sende char array
    //Solution code found at:https://forum.arduino.cc/index.php?topic=586641.0 - Comment from lesept
     int i = 0;
     while (cmd[i] != 0)
-    UDP.write((uint8_t)cmd[i++]);
+      UDP.write((uint8_t)cmd[i++]);
 
-    UDP.endPacket();
-
-      rc();
-      
+    UDP.endPacket(); 
     }
+}
 
+void loop() {
+
+  establishConnection();
+
+  sendCommands();
+ 
 }
