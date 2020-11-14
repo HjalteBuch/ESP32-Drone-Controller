@@ -42,7 +42,7 @@ String cmd;
 using namespace std; 
 
 //Solution found at https://stackoverflow.com/questions/17853988/convert-string-to-const-char-issue
-int main() 
+int convertChar() 
 { 
 const char* command = cmd.c_str(); 
 string str;
@@ -105,8 +105,14 @@ void rc(){
   int roll = mpu6050.getAngleX() * -1;
   int pitch = mpu6050.getAngleY() * -1;
   int throttle = map(analogRead(potentiometerPin), 0, 4095, -100, 100);
+  if(throttle < 5 && throttle > -5){
+    throttle = 0;
+  }
   int yaw = map(analogRead(joystickXPin)+160, 0, 4095, -100, 100);
-cmd = "rc " + String(roll) + " " + String(pitch) + " " + String(throttle) + " " + String(yaw);
+  if(yaw < yawDeadzone+10 && yaw > yawDeadzone-10){
+    yaw=0;
+  }
+cmd = "rc " + String(throttle) + " " + String(roll) + " " + String(pitch) + " " + String(yaw);
 Serial.println(cmd);
 }
 
