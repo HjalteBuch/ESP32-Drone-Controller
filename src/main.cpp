@@ -3,6 +3,8 @@
 #include <WiFi.h>
 #include <WiFiUDP.h>
 #include <MPU6050_tockn.h>
+#include <iostream>
+
 
 MPU6050 mpu6050(Wire);
 
@@ -31,8 +33,28 @@ IPAddress ip;
 
 WiFiUDP UDP;
 
+
+
 char packetBuffer[255];
 char reply[] = "connectionSucces";
+
+String cmd;
+using namespace std; 
+
+//Solution found at https://stackoverflow.com/questions/17853988/convert-string-to-const-char-issue
+int main() 
+{ 
+const char* command = cmd.c_str(); 
+string str;
+int i; 
+for(i=0;i<sizeof(command);i++) 
+    { 
+        str[i]=command[i]; 
+        cout<<str[i]; 
+    } 
+return 0; 
+}
+
 boolean isconnected = false;
 
 void setup() {
@@ -84,7 +106,7 @@ void rc(){
   int pitch = mpu6050.getAngleY() * -1;
   int throttle = map(analogRead(potentiometerPin), 0, 4095, -100, 100);
   int yaw = map(analogRead(joystickXPin)+160, 0, 4095, -100, 100);
-String cmd = "rc " + String(roll) + " " + String(pitch) + " " + String(throttle) + " " + String(yaw);
+cmd = "rc " + String(roll) + " " + String(pitch) + " " + String(throttle) + " " + String(yaw);
 Serial.println(cmd);
 }
 
@@ -113,6 +135,16 @@ void loop() {
     
   }
   if(isconnected){
+UDP.beginPacket(UDP.remoteIP(), UDP.remotePort());
+
+   //UDP.write would not sende char array
+   //Solution code found at:https://forum.arduino.cc/index.php?topic=586641.0 - Comment from lesept
+    int i = 0;
+    while (cmd[i] != 0)
+    UDP.write((uint8_t)cmd[i++]);
+
+    UDP.endPacket();
+
       rc();
       
     }
