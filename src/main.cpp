@@ -21,10 +21,11 @@ const int tollerance = 250;
 int rollDeadzone;
 int pitchDeadzone;
 int yawDeadzone;
+int buttonState = 0;
 
 int status = WL_IDLE_STATUS;
-char ssid[] = "Direkte til Himlen"; //  your network SSID (name)
-char pass[] = "Espresso123";    // your network password (use for WPA, or use as key for WEP)
+char ssid[] = "OnePlus5T"; //  your network SSID (name)
+char pass[] = "123321hej";    // your network password (use for WPA, or use as key for WEP)
 
 
 unsigned int outgoinglocalPort = 4000;      // local port to listen on
@@ -78,6 +79,7 @@ void setup() {
   pitchDeadzone = mpu6050.getAngleY();
   yawDeadzone = analogRead(joystickXPin);
 
+
   while (status != WL_CONNECTED) {
 
     Serial.print("Attempting to connect to WPA SSID: ");
@@ -109,7 +111,7 @@ void rc(){
     throttle = 0;
   }
   int yaw = map(analogRead(joystickXPin)+160, 0, 4095, -100, 100);
-  if(yaw < yawDeadzone+10 && yaw > yawDeadzone-10){
+  if(yaw < yawDeadzone+15 && yaw > yawDeadzone-5){
     yaw=0;
   }
 cmd = "rc " + String(throttle) + " " + String(roll) + " " + String(pitch) + " " + String(yaw);
@@ -157,10 +159,20 @@ void sendCommands(){
     }
 }
 
+void disconnect(){
+  buttonState = digitalRead(buttonPinBlue);
+  if(!buttonState){
+    delay(1000);
+    Serial.println("Disconnected!");
+    isconnected = false;
+  }
+}
+
 void loop() {
 
   establishConnection();
 
   sendCommands();
- 
+
+  disconnect();
 }
