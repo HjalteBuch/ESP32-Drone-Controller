@@ -42,7 +42,8 @@ char reply[] = "connectionSucces";
 String cmd;
 using namespace std; 
 
-//Solution found at https://stackoverflow.com/questions/17853988/convert-string-to-const-char-issue
+// Couldn't figure out how to convert a String to a CharArray 
+// Solution found at https://stackoverflow.com/questions/17853988/convert-string-to-const-char-issue
 int convertChar() 
 { 
 const char* command = cmd.c_str(); 
@@ -64,6 +65,7 @@ void setup() {
   WiFi.disconnect(true);
   WiFi.mode(WIFI_STA);
 
+  // Set Pin modes
   pinMode(joystickXPin, INPUT);
   pinMode(potentiometerPin, INPUT);
   pinMode(buttonPinWhite, INPUT_PULLUP);
@@ -73,13 +75,14 @@ void setup() {
   mpu6050.begin();
   mpu6050.calcGyroOffsets(true);
 
-
+  // set deadzones to the current value 
   mpu6050.update();
   rollDeadzone = mpu6050.getAngleX();
   pitchDeadzone = mpu6050.getAngleY();
   yawDeadzone = analogRead(joystickXPin);
 
 
+  // connect to wifi
   while (status != WL_CONNECTED) {
 
     Serial.print("Attempting to connect to WPA SSID: ");
@@ -89,8 +92,6 @@ void setup() {
     // Connect to WPA/WPA2 network:
 
     status = WiFi.begin(ssid, pass);
-
-    // wait 10 seconds for connection:
 
     delay(2000);
     Serial.println(WiFi.localIP());
@@ -102,6 +103,7 @@ void setup() {
   UDP.begin(incomminglocalPort);
 }
 
+// Create String with all inputs
 void rc(){
   mpu6050.update();
   int roll = mpu6050.getAngleX() * -1;
@@ -115,7 +117,6 @@ void rc(){
     yaw=0;
   }
 cmd = "rc " + String(throttle) + " " + String(roll) + " " + String(pitch) + " " + String(yaw);
-Serial.println(cmd);
 }
 
   void establishConnection(){
@@ -123,15 +124,12 @@ Serial.println(cmd);
     // if there's data available, read a packet
       int packetSize = UDP.parsePacket();
       if(packetSize){
-        Serial.print("Received packet of size ");
-        Serial.println(packetSize);
-        
-
+        Serial.println("Packet recieved");
         UDP.read(packetBuffer, 255);
           if(strcmp(packetBuffer,"connectionAttempt")==0){
             delay(1000);
             UDP.beginPacket(UDP.remoteIP(), outgoinglocalPort);
-            //UDP.write would not sende char array
+            //UDP.write would not send char array
             //Solution code found at:https://forum.arduino.cc/index.php?topic=586641.0 - Comment from lesept
             int i = 0;
             while (reply[i] != 0)
@@ -149,7 +147,7 @@ void sendCommands(){
  if(isconnected){
     rc();
     UDP.beginPacket(UDP.remoteIP(), outgoinglocalPort);
-   //UDP.write would not sende char array
+   //UDP.write would not send char array
    //Solution code found at:https://forum.arduino.cc/index.php?topic=586641.0 - Comment from lesept
     int i = 0;
     while (cmd[i] != 0)
